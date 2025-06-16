@@ -7,7 +7,7 @@ const getAllProducts = async (req, res) => {
       SELECT p.*, c.category_name
       FROM cust_products p
       LEFT JOIN cust_categories c ON p.category_id = c.category_id
-      ORDER BY p.created_at DESC
+      ORDER BY product_id ASC
     `);
     res.json({ products: result.rows });
   } catch (err) {
@@ -142,6 +142,31 @@ const getProductCount = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+// PATCh - Update  product stock
+const updateStock = async (req, res) => {
+  const { id } = req.params;
+  const { stock_quantity, product_stock_available } = req.body;
+
+  if (stock_quantity === undefined && product_stock_available === undefined) {
+    return res.status(400).json({ error: "No stock fields provided" });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE cust_products
+       SET stock_quantity = COALESCE($1, stock_quantity),
+           product_stock_available = COALESCE($2, product_stock_available)
+       WHERE product_id = $3
+       RETURNING *`,
+      [stock_quantity, product_stock_available, id]
+    );
+
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error("Error updating stock:", err.message);
+    res.status(500).json({ error: "Failed to update stock" });
+  }
+};
 
 
 module.exports = {
@@ -150,5 +175,6 @@ module.exports = {
   addProduct,
   updateProduct,
   deleteProduct,
-  getProductCount
+  getProductCount,
+  updateStock
 };

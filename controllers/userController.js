@@ -1,8 +1,10 @@
+//userController.js
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { createUser, findUserByEmail, findUserById } = require("../models/userModel");
 
-// Register new user
+// ✅ Register new user
 const registerUser = async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -13,7 +15,6 @@ const registerUser = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await createUser({ name, email, passwordHash, role });
 
-    // ✅ Create token on registration
     const token = jwt.sign(
       { user_id: user.user_id, role: user.role },
       process.env.JWT_SECRET,
@@ -37,7 +38,7 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Login user
+// ✅ Regular user login
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -81,11 +82,56 @@ const loginUser = async (req, res) => {
   }
 };
 
-// Protected route - get current user profile
+// ✅ Hardcoded Admin Login
+const loginAdmin = async (req, res) => {
+  const { email, password } = req.body;
+
+  // Hardcoded credentials check
+  if (email === "admin@cff" && password === "123456") {
+    const token = jwt.sign(
+      { user_id: 0, role: "admin" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.json({
+      message: "Admin login successful",
+      token,
+      user: {
+        user_id: 0,
+        name: "Super Admin",
+        email,
+        role: "admin",
+      },
+    });
+  }
+
+  return res.status(401).json({ error: "Unauthorized: Invalid admin credentials" });
+};
+
+// ✅ Get current user profile
 const getProfile = async (req, res) => {
   try {
-    const user = await findUserById(req.user.user_id); // req.user is set by middleware
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (req.user.role === "admin") {
+  return res.json({
+    user_id: 0,
+    name: "Super Admin",
+    email: "admin@cff",
+    role: "admin",
+    created_at: "N/A"
+  });
+}
+
+const user = await findUserById(req.user.user_id);
+if (!user) return res.status(404).json({ error: "User not found" });
+
+res.json({
+  user_id: user.user_id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  created_at: user.created_at,
+});
 
     res.json({
       user_id: user.user_id,
@@ -103,5 +149,6 @@ const getProfile = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  loginAdmin,
   getProfile,
 };
