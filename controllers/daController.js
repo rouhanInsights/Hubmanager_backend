@@ -72,11 +72,27 @@ const getaApprovedAgents = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+// Count only approved delivery agents
+const countApprovedAgents = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT COUNT(*) AS approved_count
+      FROM da_users
+      WHERE status = 'approved'
+    `);
+    res.status(200).json({ count: parseInt(result.rows[0].approved_count, 10) });
+  } catch (err) {
+    console.error("Error counting approved agents:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 
 module.exports = {
   getAllAgents,
   countAgents,
   updateAgentStatus,
   updateAvailability,
-  getaApprovedAgents
+  getaApprovedAgents,
+  countApprovedAgents
 };

@@ -39,8 +39,26 @@ const getPaymentByOrderId = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+// Get total number of payments
+const getPaymentCount = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT COUNT(*) AS total_payments
+      FROM cust_orders
+      WHERE payment_method IS NOT NULL
+    `);
+
+    res.status(200).json({ count: parseInt(result.rows[0].total_payments, 10) });
+  } catch (err) {
+    console.error("Error counting payments:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 
 module.exports = {
   getAllPayments,
   getPaymentByOrderId,
+  getPaymentCount,
+
 };

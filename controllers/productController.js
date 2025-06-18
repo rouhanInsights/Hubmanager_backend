@@ -43,25 +43,26 @@ const addProduct = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `WITH max_id AS (
-  SELECT MAX(product_id) + 1 AS next_id
-  FROM cust_products
-)
-INSERT INTO cust_products (
-    product_id, name, description, price, stock_quantity, category_id, image_url,
+  `WITH max_id AS (
+    SELECT MAX(product_id) + 1 AS next_id
+    FROM cust_products
+  )
+  INSERT INTO cust_products (
+      product_id, name, description, price, stock_quantity, category_id, image_url,
+      sale_price, product_published, product_featured, product_visibility,
+      product_short_description, product_tax, product_stock_available, weight
+  )
+  SELECT next_id, $1, $2, $3, $4, $5, $6,
+         $7, $8, $9, $10, $11, $12, $13, $14, $15
+  FROM max_id
+  RETURNING *`,
+  [
+    name, description, price, stock_quantity, category_id, image_url,
     sale_price, product_published, product_featured, product_visibility,
     product_short_description, product_tax, product_stock_available, weight
-)
-SELECT next_id, $1, $2, $3, $4, $5, $6,
-       $7, $8, $9, $10, $11, $12, $13, $14
-FROM max_id
-RETURNING *`,
-      [
-        name, description, price, stock_quantity, category_id, image_url,
-        sale_price, product_published, product_featured, product_visibility,
-        product_short_description, product_tax, product_stock_available, weight
-      ]
-    );
+  ]
+);
+
     res.status(201).json({ message: "Product added", product: result.rows[0] });
   } catch (err) {
     console.error("Error adding product:", err);
