@@ -113,38 +113,34 @@ const loginAdmin = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     if (req.user.role === "admin") {
-  return res.json({
-    user_id: 0,
-    name: "Super Admin",
-    email: "admin@cff",
-    role: "admin",
-    created_at: "N/A"
-  });
-}
+      return res.json({
+        user_id: 0,
+        name: "Super Admin",
+        email: "admin@cff",
+        role: "admin",
+        created_at: "N/A"
+      });
+    }
 
-const user = await findUserById(req.user.user_id);
-if (!user) return res.status(404).json({ error: "User not found" });
+    const user = await findUserById(req.user.user_id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-res.json({
-  user_id: user.user_id,
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  created_at: user.created_at,
-});
-
-    res.json({
+    return res.json({
       user_id: user.user_id,
       name: user.name,
       email: user.email,
       role: user.role,
       created_at: user.created_at,
     });
+
   } catch (err) {
     console.error("❌ Profile error:", err);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 };
+
 
 module.exports = {
   registerUser,
