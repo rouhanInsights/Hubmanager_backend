@@ -14,7 +14,7 @@ const { startNotificationListener } = require("./utils/notificationsService");
 const app = express();
 
 // ✅ Allowed Origins
-const allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
+const allowedOrigins = "http://localhost:3000";
 
 app.use(
   cors({
@@ -44,6 +44,7 @@ app.use("/api/da-orders", require("./routes/daOrderRoutes"));
 app.use("/api", require("./routes/uploadRoutes"));
 app.use("/api/hubmanagers", require("./routes/hubmanagerRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes")); // ✅ new route
+app.use("/api/feedback", require("./routes/feedbackRoutes")); // ✅ feedback route
 
 // ✅ Default route
 app.get("/", (req, res) => {
