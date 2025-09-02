@@ -3,6 +3,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const http = require("http"); // 🧩 New
+const { Server } = require("socket.io"); // 🧩 New
 
 // ✅ Load environment variables
 dotenv.config();
@@ -12,6 +14,14 @@ const { startNotificationListener } = require("./utils/notificationsService");
 
 // ✅ Initialize Express app
 const app = express();
+const server = http.createServer(app); // 🧩 Wrap express with HTTP server
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000", // ✅ adjust for prod if needed
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
 // ✅ Allowed Origins
 const allowedOrigins = "http://localhost:3000";
@@ -51,14 +61,23 @@ app.get("/", (req, res) => {
   res.send("🚀 API is running");
 });
 
+// ✅ Socket.IO connection log
+io.on("connection", (socket) => {
+  console.log(`🟢 Client connected: ${socket.id}`);
+
+  socket.on("disconnect", () => {
+    console.log(`🔴 Client disconnected: ${socket.id}`);
+  });
+});
+
 // ✅ Start server + PostgreSQL notification listener
 const PORT = process.env.PORT || 5001;
-
-app.listen(PORT, () =>
+server.listen(PORT, () =>
   console.log(`🚀 Server running on port ${PORT}`)
 );
 
-// ✅ Start the PostgreSQL listener after server starts
-startNotificationListener()
+
+// ✅ Pass io to the notification listener
+startNotificationListener(io)
   .then(() => console.log("📡 Notification listener started ✅"))
   .catch((err) => console.error("❌ Notification listener failed", err));
