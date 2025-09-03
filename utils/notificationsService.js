@@ -3,10 +3,10 @@ const { Client } = require("pg");
 let latestNotifications = [];
 
 const client = new Client({
-  connectionString: process.env.DATABASE_URL, // Make sure this exists in .env
+  connectionString: process.env.DATABASE_URL,
 });
 
-async function startNotificationListener() {
+async function startNotificationListener(io) {
   try {
     await client.connect();
     await client.query("LISTEN new_order");
@@ -15,17 +15,13 @@ async function startNotificationListener() {
       try {
         const payload = JSON.parse(msg.payload || "{}");
 
-        // Expecting:
-        // {
-        //   order_id: number,
-        //   user_id: number,
-        //   order_date: string,
-        //   total_price: number
-        // }
-
         latestNotifications.unshift(payload);
         latestNotifications = latestNotifications.slice(0, 10); // keep latest 10
+
         console.log("🔔 New order notification received:", payload);
+
+        // ✅ Send to all connected clients
+        io.emit("new_notification", payload);
       } catch (err) {
         console.error("Error parsing notification payload:", err);
       }
@@ -42,7 +38,6 @@ async function startNotificationListener() {
 }
 
 function getLatestNotifications() {
-  console.log("📡 Sending latest notifications to frontend:", latestNotifications);
   return latestNotifications;
 }
 

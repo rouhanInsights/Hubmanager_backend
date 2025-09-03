@@ -1,12 +1,22 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const http = require("http"); // 🧩 New
+const { Server } = require("socket.io"); // 🧩 New
 
 dotenv.config();
 
 const { startNotificationListener } = require("./utils/notificationsService");
 
 const app = express();
+const server = http.createServer(app); // 🧩 Wrap express with HTTP server
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000", // ✅ adjust for prod if needed
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
 const allowedOrigins = ["http://localhost:3000"];
 app.use(
@@ -35,6 +45,7 @@ app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/feedback", require("./routes/feedbackRoutes"));
 
 
+<<<<<<< HEAD
 // **MIS report route** — note the dashed path matching the frontend
 app.use("/api/misreport", require("./routes/misRoutes"));
 
@@ -46,3 +57,25 @@ app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 startNotificationListener()
   .then(() => console.log("📡 Notification listener started"))
   .catch((err) => console.error("❌ Notification listener failed", err));
+=======
+// ✅ Socket.IO connection log
+io.on("connection", (socket) => {
+  console.log(`🟢 Client connected: ${socket.id}`);
+
+  socket.on("disconnect", () => {
+    console.log(`🔴 Client disconnected: ${socket.id}`);
+  });
+});
+
+// ✅ Start server + PostgreSQL notification listener
+const PORT = process.env.PORT || 5001;
+server.listen(PORT, () =>
+  console.log(`🚀 Server running on port ${PORT}`)
+);
+
+
+// ✅ Pass io to the notification listener
+startNotificationListener(io)
+  .then(() => console.log("📡 Notification listener started ✅"))
+  .catch((err) => console.error("❌ Notification listener failed", err));
+>>>>>>> 23728ee569ab7351f918c7d32ec64d0fae8ef681
