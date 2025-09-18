@@ -5,30 +5,27 @@ const getAllOrders = async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-  o.order_id,
-  o.order_date,
-  o.slot_date,
-  s.slot_details,
-  o.status,
-  o.total_price,
-  o.payment_method,
-  u.name AS customer_name,
-  u.phone,
-  CONCAT_WS(', ', a.address_line1, a.address_line2, a.city, a.state, a.pincode) AS full_address,
-  ARRAY_AGG(p.name || ' (x' || i.quantity || ')') AS product_details
-FROM cust_orders o
-JOIN cust_users u ON o.user_id = u.user_id
-JOIN cust_addresses a ON o.address_id = a.address_id
-JOIN cust_order_items i ON o.order_id = i.order_id
-JOIN cust_products p ON i.product_id = p.product_id
-JOIN cust_slot_details s ON o.slot_id = s.slot_id
-GROUP BY
-  o.order_id, o.order_date, o.slot_date, s.slot_details,
-  o.status, o.total_price, o.payment_method,
-  u.name, u.phone,
-  a.address_line1, a.address_line2, a.city, a.state, a.pincode
-ORDER BY o.order_date DESC;
-
+        o.order_id,
+        o.order_date,
+        o.slot_date,
+        s.slot_details,
+        o.status,
+        o.total_price,
+        o.payment_method,
+        a.name AS customer_name, -- 🆕 from cust_addresses
+        a.phone,                 -- 🆕 from cust_addresses
+        CONCAT_WS(', ', a.address_line1, a.address_line2, a.city, a.state, a.pincode) AS full_address,
+        ARRAY_AGG(p.name || ' (x' || i.quantity || ')') AS product_details
+      FROM cust_orders o
+      JOIN cust_addresses a ON o.address_id = a.address_id
+      JOIN cust_order_items i ON o.order_id = i.order_id
+      JOIN cust_products p ON i.product_id = p.product_id
+      JOIN cust_slot_details s ON o.slot_id = s.slot_id
+      GROUP BY
+        o.order_id, o.order_date, o.slot_date, s.slot_details,
+        o.status, o.total_price, o.payment_method,
+        a.name, a.phone, a.address_line1, a.address_line2, a.city, a.state, a.pincode
+      ORDER BY o.order_date DESC;
     `);
 
     res.status(200).json({ orders: result.rows });
@@ -37,6 +34,7 @@ ORDER BY o.order_date DESC;
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 const getOrderCount = async (req, res) => {
   try {
