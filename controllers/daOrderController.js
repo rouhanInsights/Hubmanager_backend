@@ -124,7 +124,8 @@ const getAssignedOrders = async (req, res) => {
         d.assigned_order_address AS full_address,
         d.assigned_slot_details AS slot_details,
         d.order_status,
-        d.remarks
+        d.remarks,
+        d.delivered_at              -- 👈 include delivered_at
       FROM da_assigned_order d
       JOIN da_users u ON d.da_id = u.user_id
       ORDER BY d.assigned_id DESC
@@ -135,6 +136,7 @@ const getAssignedOrders = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 // Assign multiple orders to a DA
 const getAssignMultiple = async (req, res) => {
